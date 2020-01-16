@@ -1,0 +1,11 @@
+.metadata
+RemoteSystemsTempFiles
+*.log
+workspace/bloom_system
+
+workspace/bloom/Debug
+workspace/bloom/Release
+workspace/bloom/.settings
+workspace/bloom/libs
+workspace/bloom/.cproject
+workspace/bloom/.project

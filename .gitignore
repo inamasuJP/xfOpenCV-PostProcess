@@ -1,7 +1,13 @@
 .metadata
 RemoteSystemsTempFiles
 *.log
+*.str
+sdx_webtalk.*
+webtalk.jou
+
 workspace/bloom_system
+workspace/ip_cache
+workspace/webtalk
 
 workspace/bloom/Debug
 workspace/bloom/Release

@@ -6,6 +6,7 @@ sdx_webtalk.*
 webtalk.jou
 
 workspace/bloom_system
+workspace/EGL_xfOpenCV_system
 workspace/ip_cache
 workspace/webtalk
 
@@ -15,3 +16,10 @@ workspace/bloom/.settings
 workspace/bloom/libs
 workspace/bloom/.cproject
 workspace/bloom/.project
+
+workspace/EGL_xfOpenCV/Debug
+workspace/EGL_xfOpenCV/Release
+workspace/EGL_xfOpenCV/.settings
+workspace/EGL_xfOpenCV/libs
+workspace/EGL_xfOpenCV/.cproject
+workspace/EGL_xfOpenCV/.project

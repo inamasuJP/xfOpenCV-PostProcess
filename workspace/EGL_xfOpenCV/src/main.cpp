@@ -38,10 +38,11 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "texture.h"
 
 
-#define SAMPLE_COUNT 15
+#define SAMPLE_COUNT 5
 
 bool enable_fpga = false;
 bool enable_gpu = false;
+int interval = 0;
 
 int loopNum = 100;
 
@@ -50,7 +51,7 @@ cv::Mat in_img, out_img, ocv_ref, diff, filter, bright_img, blur_img;
 void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::string pngFile,bool verbose,int mode)
 {
 
-	eglSwapInterval(display,0); //Beyond 60fps
+	eglSwapInterval(display,interval); //Beyond 60fps
     //auto png = loadPng(pngFile);
     in_img = cv::imread(pngFile,1);
     cv::flip(in_img , in_img, 0);
@@ -452,14 +453,44 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
 */
 
     //}
+    bool mode_1 = false;
+    bool mode_2 = false;
+    bool mode_3 = false;
+    bool mode_4 = false;
+    for(int i = 0; i < 4; i++){
+    	switch (mode % 10){
+    		case 1:
+    			mode_1 = true;
+    			break;
+    		case 2:
+    			mode_2 = true;
+    			break;
+    		case 3:
+    		 	mode_3 = true;
+    		    break;
+    		case 4:
+    		    mode_4 = true;
+    		    break;
+    		default:
+    			//std::cout << "Error. mode number is only 1 ~ 4. " << std::endl;
+    			//exit(1);
+    			break;
+    	}
+    	mode /= 10;
+    }
+    std::cout << "mode_1 : " << std::boolalpha << mode_1
+    		<< "mode_2 : " << std::boolalpha << mode_2
+			<< "mode_3 : " << std::boolalpha << mode_3
+			<< "mode_4 : " << std::boolalpha << mode_4 << std::endl;
+    bool while_loop = true;
+    int loop_count = 0;
+    long int average_tmp = 0;
 
-
-
-    while (true)
+    while (while_loop)
      {
     	auto startTime = std::chrono::high_resolution_clock::now();
     	XPending(xdisplay);
-    	if(mode == 0 || mode == 1){ //load in_img (program1)
+    	if(mode_1){ //load in_img (program1)
 			glUseProgram(program1);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0); //0を指定すると描画する
 			//glClearColor(0.0f, 0.0f, 0.0f, 0.1f);
@@ -470,7 +501,7 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
 			glUniform1i(textures[1], 0);
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     	}
-		if(mode == 0 || mode == 2){ //LUT (program0)
+		if(mode_2){ //LUT (program0)
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D,originalScreen);
 			glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,in_img.cols, in_img.rows,0);
@@ -483,7 +514,7 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
 			glUniform1i(textures[0], 1);
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		}
-		if(mode == 0 || mode == 3){//Filter2D (program2)
+		if(mode_3){//Filter2D (program2)
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D,collectBrightBuffer);
 			glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,in_img.cols, in_img.rows,0);
@@ -499,7 +530,7 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
 			glUniform1fv(weightsLocationV, SAMPLE_COUNT * SAMPLE_COUNT ,weightVH);
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		}
-		if(mode == 0 || mode == 4){ //Add (program3)
+		if(mode_4){ //Add (program3)
 			glActiveTexture(GL_TEXTURE1); //add
 			glBindTexture(GL_TEXTURE_2D,collectBrightBuffer);//add
 			glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,in_img.cols, in_img.rows,0);
@@ -522,10 +553,13 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
 		auto curerntTime = std::chrono::high_resolution_clock::now();
 		nbFrames++;
 		if (curerntTime - lastTime >= sec) {
+			loop_count ++;
+			average_tmp += std::chrono::duration_cast< std::chrono::microseconds >(curerntTime - startTime).count() ;
         	std::cout << "Elapsed Time(µs) : "<<std::chrono::duration_cast< std::chrono::microseconds >(curerntTime - startTime).count() << std::endl;
 			printf("%d fps \n",nbFrames);
 			nbFrames = 0;
 			lastTime = std::chrono::high_resolution_clock::now();
+           if(loop_count > 9) while_loop = false;
 		}
 		if(verbose){
 			GLenum error_code;
@@ -533,6 +567,7 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
 		   if( error_code != GL_NO_ERROR ) std::cout << "glGetError Code: " << error_code <<std::endl;
 		}
      }
+    std::cout << "10 times Average(µs) : " << average_tmp / 10 << std::endl;
 
     //deletePng(png);
     deleteShaderProgram(program0);
@@ -543,6 +578,7 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
 
 void fpga_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::string pngFile,bool verbose,int mode)
 {
+	eglSwapInterval(display,interval); //Beyond 60fps
     unsigned char shift = SHIFT;
     //////////////////  Creating the kernel ////////////////
 	filter.create(FILTER_HEIGHT,FILTER_WIDTH,CV_32F);
@@ -728,8 +764,8 @@ void fpga_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::s
 	//int loopNum = atoi(argv[2]);
 	for (int i = 0; i < loopNum; i++)
 	{
-		 XPending(xdisplay);
 		 auto loadTime = std::chrono::high_resolution_clock::now();
+		 XPending(xdisplay);
 
 		 imgInput.copyTo(in_img.data);
 
@@ -745,18 +781,16 @@ void fpga_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::s
         //glUseProgram(program1);
         //glBindFramebuffer(GL_FRAMEBUFFER, 0); //0を指定すると描画する
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, in_img.cols,in_img.rows , 0, GL_RGB, GL_UNSIGNED_BYTE, imgOutput.data);
-
-        auto texTime = std::chrono::high_resolution_clock::now();
         //glClearColor(0.0f, 0.0f, 0.0f, 0.1f);
         //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //glActiveTexture(GL_TEXTURE0);
         //glBindTexture(GL_TEXTURE_2D, cvTexture);
         //glUniform1i(textures[0], 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        eglSwapBuffers(display, surface);
 
         auto currentTime = std::chrono::high_resolution_clock::now();
 
-        eglSwapBuffers(display, surface);
 		nbFrames++;
 		if (currentTime - lastTime >= sec) {
 			//std::cout << std::chrono::duration_cast< std::chrono::microseconds >(currentTime - startTime).count() << " (microsecond)" << std::endl;
@@ -764,16 +798,8 @@ void fpga_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::s
 					<< "  lut_accel Time(µs) : " <<std::chrono::duration_cast< std::chrono::microseconds >(lutTime - startTime).count() << "\n"
 					<< "  Filter2d_accel Time(µs) : " <<std::chrono::duration_cast< std::chrono::microseconds >(filter2DTime - lutTime).count() << "\n"
 					<< "  arithm_accel Time(µs) : " <<std::chrono::duration_cast< std::chrono::microseconds >(addTime - filter2DTime).count() << "\n"
-					<< "  glTexImage2D() Time(µs) : " <<std::chrono::duration_cast< std::chrono::microseconds >(texTime - addTime).count() << "\n"
-					<< "  glDrawArrays() Time(µs) : " <<std::chrono::duration_cast< std::chrono::microseconds >(currentTime - texTime).count() << std::endl;
-			/*
-			std::cout << "FPGA time : " << std::chrono::duration_cast< std::chrono::microseconds >(fpgaTime - startTime).count()
-					<< " GPU time : " << std::chrono::duration_cast< std::chrono::microseconds >(currentTime - fpgaTime).count()
-					<< " (microsecond)" << std::endl;
-			std::cout << "glTexImage2D() Time : " << std::chrono::duration_cast< std::chrono::microseconds >(texTime - fpgaTime).count()
-					<< " glDrawArrays() Time : " << std::chrono::duration_cast< std::chrono::microseconds >(currentTime - texTime).count()
-					<< " (microsecond)" << std::endl;
-					*/
+					<< "  GPU Load and Draw Time(µs) : " <<std::chrono::duration_cast< std::chrono::microseconds >(currentTime - addTime).count() <<"\n"
+					<< "  Total Time (µs) : " << std::chrono::duration_cast< std::chrono::microseconds >(currentTime - loadTime).count() << std::endl;
 			printf("%d fps \n",nbFrames);
 			nbFrames = 0;
 			lastTime = std::chrono::high_resolution_clock::now();
@@ -802,10 +828,10 @@ int main(int argc, char *argv[])
     opterr = 0; //getopt()のエラーメッセージを無効にする。
 
     bool verbose = false;
-    int mode = 0;
+    int mode = 4;
     std::string pngFile = "Torus.png";
 
-    while ((opt = getopt(argc, argv, "vm:p:fgn:")) != -1) {
+    while ((opt = getopt(argc, argv, "vm:p:fgn:i:")) != -1) {
         switch (opt){
             case 'v':
                 verbose = true;
@@ -813,9 +839,9 @@ int main(int argc, char *argv[])
 
             case 'm':
                 mode = atoi(optarg);
-                if(mode < 0 || 4 < mode) {
-                    mode = 0;
-                    std::cout << "[Error] mode(-m) argument is only 0 ~ 4 number." << std::endl;
+                if(mode < 1 || 1234 < mode) {
+                    mode = 4;
+                    std::cout << "[Error] mode(-m) argument is only 1 ~ 4 number." << std::endl;
                 }
                 break;
 
@@ -835,15 +861,20 @@ int main(int argc, char *argv[])
             	loopNum = atoi(optarg);
             	break;
 
+            case 'i'://eglSwapInterval
+            	interval = atoi(optarg);
+            	break;
 
             default:
-                std::cout << "Usage:\t" << argv[0] << " [-f -n number] [-g] [-v] [-m number(1~4)] [-p png-file-name] \n\n"
+                std::cout << "Usage:\t" << argv[0] << " [-f -n number] [-g] [-v] [-m number(1~4)] [-p png-file-name] [-i number(0~10)]\n\n"
                     << "Options:\n"
                     << "\t -f : Enable FPGA acceleration / -g : Enable GPU acceleration \n"
 					  << "\t -n : Exection time at FPGA mode \t(default : 100)\n"
                     << "\t -v : Enable verbose \t(default : false)\n"
                     << "\t -m : Change mode \t(default : 4)\n"
-                    << "\t -p : Set png file \t(default : Torus.png)\n" << std::endl;
+                    << "\t -p : Set png file \t(default : Torus.png)\n"
+					   << "\t -i : Set eglSwapInterval() 0:No Limit, 1:60fps 2:30fps 3:20fps ... \t(default : 0)"
+					<< std::endl;
                 return 0;
                 break;
         }
@@ -856,6 +887,8 @@ int main(int argc, char *argv[])
         return -1;
     }
     std::cout << "Run Mode:" << mode << " Load Png:" << pngFile << " verbose:" << std::boolalpha << verbose << std::endl;
+    if(interval == 0) std::cout << "Frame Limit : No Limit" << std::endl;
+    else std::cout << "Frame Limit : " << 60/interval << std::endl;
     //auto png = loadPng(pngFile);
 
 #if GRAY
@@ -891,7 +924,7 @@ int main(int argc, char *argv[])
     if(enable_gpu) gpu_loop(xdisplay, display, surface,pngFile,verbose,mode);
     else if(enable_fpga) fpga_loop(xdisplay, display, surface,pngFile,verbose,mode);
     else {
-        std::cout << "Use CPU mode." << std::endl;
+        std::cout << "Use CPU mode.(Unimplemented)" << std::endl;
     }
 
     //deletePng(png);

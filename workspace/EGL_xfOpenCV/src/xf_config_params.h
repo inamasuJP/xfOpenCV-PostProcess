@@ -30,8 +30,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*  specify the filter height and filter width  */
 
 
-#define  FILTER_HEIGHT  15 // change by inamasu from "3" to "15"
-#define  FILTER_WIDTH  	15 // change by inamasu from "3" to "15"
+#define  FILTER_HEIGHT  5 // change by inamasu from "3" to "15"
+#define  FILTER_WIDTH  	5 // change by inamasu from "3" to "15"
 
 
 /*  set the optimization type  */

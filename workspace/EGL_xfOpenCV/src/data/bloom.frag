@@ -2,7 +2,7 @@ precision lowp float;
 
 uniform sampler2D texture;
 
-#define SAMPLE_COUNT 15
+#define SAMPLE_COUNT 5
 uniform vec2 offsetsH[SAMPLE_COUNT];
 uniform float weightsH[SAMPLE_COUNT];
 //uniform vec2 offsetsV[SAMPLE_COUNT];

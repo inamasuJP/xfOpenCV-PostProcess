@@ -38,7 +38,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "texture.h"
 
 
-#define SAMPLE_COUNT 5
+#define SAMPLE_COUNT 5 // 5 or 15
 
 bool enable_fpga = false;
 bool enable_gpu = false;
@@ -52,7 +52,6 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
 {
 
 	eglSwapInterval(display,interval); //Beyond 60fps
-    //auto png = loadPng(pngFile);
     in_img = cv::imread(pngFile,1);
     cv::flip(in_img , in_img, 0);
 
@@ -180,57 +179,7 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D,0); //NULL
-    // ------------------------------------------------------------------------------------------------------------------
 
-    //samplingあたりの部分
-    /*
-
-    GLfloat weightH[SAMPLE_COUNT];
-    GLfloat offsetTmp[SAMPLE_COUNT];
-    GLfloat total = 0.0f;
-
-    for(int i = 0; i < SAMPLE_COUNT; i++) {
-        GLfloat p = (i - (SAMPLE_COUNT -1) * 0.5) * 0.0018;
-        offsetTmp[i] = p;
-        weightH[i] = std::exp(-p * p /2) / std::sqrt(M_PI * 2);
-        total += weightH[i];
-    }
-    for (int i = 0; i< SAMPLE_COUNT; i++) {
-        weightH[i] /= total;
-    }
-    std::vector<GLfloat> tmp;
-    for (int i = 0; i < SAMPLE_COUNT; i++) {
-        tmp.insert(tmp.end(),{offsetTmp[i] , (GLfloat)0});
-    }
-    GLfloat offsetH[SAMPLE_COUNT * 2];
-    for (int i = 0; i < SAMPLE_COUNT *2; i++) {
-        offsetH[i] = tmp[i];
-    }
-
-    GLfloat weightV[SAMPLE_COUNT];
-    total = 0.0f;
-    for(int i = 0; i < SAMPLE_COUNT; i++) {
-        GLfloat p = (i - (SAMPLE_COUNT -1) * 0.5) * 0.0018;
-        offsetTmp[i] = p;
-        weightV[i] = std::exp(-p * p /2) / std::sqrt(M_PI * 2);
-        total += weightV[i];
-    }
-    for (int i = 0; i< SAMPLE_COUNT; i++) {
-        weightV[i] /= total;
-    }
-    std::vector<GLfloat> tmp2;
-    for (int i = 0; i < SAMPLE_COUNT; i++) {
-        //tmp2.insert(tmp2.end(),{offsetTmp[i] , (GLfloat)0});
-    	tmp2.insert(tmp2.end(),{(GLfloat)0, offsetTmp[i] });
-    }
-    GLfloat offsetV[SAMPLE_COUNT * 2];
-    for (int i = 0; i < SAMPLE_COUNT *2; i++) {
-        offsetV[i] = tmp2[i];
-    }
-*/
-
-
-    //------------------------Copy from fpga-loop (tmp)---------------------------------------------------------------
     //////////////////  Creating the kernel ////////////////
 	filter.create(FILTER_HEIGHT,FILTER_WIDTH,CV_32F);
 
@@ -263,196 +212,7 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
     std::chrono::milliseconds sec(1000);
     auto lastTime = std::chrono::high_resolution_clock::now();
     int nbFrames = 0;
-    //while (false)
-    //{
-    /*
-        XPending(xdisplay);
-        //if(mode >= 0) {
-        	auto startTime_0 = std::chrono::high_resolution_clock::now();
 
-            glUseProgram(program1);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0); //0を指定すると描画する
-            //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, originalScreen, 0); // Error Code: 1282
-            glClearColor(0.0f, 0.0f, 0.0f, 0.1f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glActiveTexture(GL_TEXTURE0);
-
-            auto clearTime_0 = std::chrono::high_resolution_clock::now();
-
-            glBindTexture(GL_TEXTURE_2D, pngTexture);
-
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, in_img.cols, in_img.rows, 0 , GL_RGB , GL_UNSIGNED_BYTE, in_img.data); // test add
-
-
-            auto BindTextureTime_0 = std::chrono::high_resolution_clock::now();
-
-            glUniform1i(textures[1], 0);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-            auto drawTime_0 = std::chrono::high_resolution_clock::now();
-        //}
-        //if (mode >= 1) {
-        	auto startTime_1 = std::chrono::high_resolution_clock::now();
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D,originalScreen);
-
-            auto BindTextureTime_1 = std::chrono::high_resolution_clock::now();
-
-            //glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,png.width,png.height,0);
-            glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,in_img.cols, in_img.rows,0);
-
-            auto CopyTexImageTime_1 = std::chrono::high_resolution_clock::now();
-
-            glUseProgram(program0);
-            //glBindFramebuffer(GL_FRAMEBUFFER,(GLuint)collectBrightBuffer);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glClearColor(0.0f, 0.0f, 0.0f, 0.1f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            auto clearTime_1 = std::chrono::high_resolution_clock::now();
-
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D,originalScreen);
-            glUniform1i(textures[0], 1);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-            auto drawTime_1 = std::chrono::high_resolution_clock::now();
-
-        //}
-        //if(mode >= 2) {
-        	auto startTime_2 = std::chrono::high_resolution_clock::now();
-
-            glActiveTexture(GL_TEXTURE1); //add
-            glBindTexture(GL_TEXTURE_2D,collectBrightBuffer); //add
-            //glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,png.width,png.height,0); //add
-
-            auto BindTextureTime_2 = std::chrono::high_resolution_clock::now();
-
-            glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,in_img.cols, in_img.rows,0);
-
-            auto CopyTexImageTime_2 = std::chrono::high_resolution_clock::now();
-
-            glUseProgram(program2);
-            //glBindFramebuffer(GL_FRAMEBUFFER,bloomBuffer);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0); // add
-            glClearColor(0.0f, 0.0f, 0.0f, 0.1f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            auto clearTime_2 = std::chrono::high_resolution_clock::now();
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D,collectBrightBuffer);
-            glUniform1i(textures[2],0);
-            glUniform1i(isVerticalLocation,true);
-            glUniform2fv(offsetsLocationV, SAMPLE_COUNT * SAMPLE_COUNT * 2 ,offsetVH);
-            glUniform1fv(weightsLocationV, SAMPLE_COUNT * SAMPLE_COUNT ,weightVH);
-            //glUniform2fv(offsetsLocationV, SAMPLE_COUNT * 2 ,offsetV);
-            //glUniform1fv(weightsLocationV, SAMPLE_COUNT ,weightV);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-            auto drawTime_2 = std::chrono::high_resolution_clock::now();
-        //}
-        //if (mode >= 3) {
-
-        	auto startTime_3 = std::chrono::high_resolution_clock::now();
-
-            glActiveTexture(GL_TEXTURE1); //add
-            glBindTexture(GL_TEXTURE_2D,bloomBuffer); //add
-
-            auto BindTextureTime_3 = std::chrono::high_resolution_clock::now();
-
-            //glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,png.width,png.height,0); //add
-            glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,in_img.cols, in_img.rows,0);
-
-            auto CopyTexImageTime_3 = std::chrono::high_resolution_clock::now();
-
-            glUseProgram(program2);
-            //glBindFramebuffer(GL_FRAMEBUFFER,collectBrightBuffer);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0); // add
-            glClearColor(0.0f, 0.0f, 0.0f, 0.1f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            auto clearTime_3 = std::chrono::high_resolution_clock::now();
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D,bloomBuffer);
-            glUniform1i(textures[2],0);
-            glUniform1i(isVerticalLocation,false);
-            glUniform2fv(offsetsLocationH, SAMPLE_COUNT * 2 ,offsetH);
-            glUniform1fv(weightsLocationH, SAMPLE_COUNT ,weightH);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-            auto drawTime_3 = std::chrono::high_resolution_clock::now();
-
-        //}
-        //if (mode >= 4) {
-        	auto startTime_4 = std::chrono::high_resolution_clock::now();
-
-            glActiveTexture(GL_TEXTURE1); //add
-            glBindTexture(GL_TEXTURE_2D,collectBrightBuffer); //add
-
-            auto BindTextureTime_4 = std::chrono::high_resolution_clock::now();
-
-            //glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,png.width,png.height,0); //add
-            glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGB,0,0,in_img.cols, in_img.rows,0);
-
-            auto CopyTexImageTime_4 = std::chrono::high_resolution_clock::now();
-
-            glUseProgram(program3);
-            glBindFramebuffer(GL_FRAMEBUFFER,0);
-            glClearColor(0.0f, 0.0f, 0.0f, 0.1f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            auto clearTime_4 = std::chrono::high_resolution_clock::now();
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D,originalScreen);
-            glUniform1i(textures[3],0);
-            glUniform1f(toneScaleLocation,0.7);
-
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D,collectBrightBuffer);
-            glUniform1i(textures[4],1);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-            auto drawTime_4 = std::chrono::high_resolution_clock::now();
-        //}
-        //glFlush();
-        eglSwapBuffers(display, surface);
-        */
-/*
-        auto curerntTime = std::chrono::high_resolution_clock::now();
-        nbFrames++;
-        if (curerntTime - lastTime >= sec) {
-        	std::cout << "mode0 init Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(clearTime_0 - startTime_0).count() << "\n"
-        			<< "mode0 glBindTextureTime(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(BindTextureTime_0 - clearTime_0).count() << "\n"
-					<< "mode0 drawTime(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(drawTime_0 - BindTextureTime_0).count() << "\n"
-
-					<< "mode1 glBindTextureTime Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(BindTextureTime_1 - startTime_1).count() << "\n"
-					<< "mode1 CopyTexImageTime(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(CopyTexImageTime_1 - BindTextureTime_1).count() << "\n"
-					<< "mode1 Clear Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(clearTime_1 - CopyTexImageTime_1).count() << "\n"
-					<< "mode1 draw Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(drawTime_1 - clearTime_1).count() << "\n"
-
-					<< "mode2 glBindTextureTime Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(BindTextureTime_2 - startTime_2).count() << "\n"
-					<< "mode2 CopyTexImageTime(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(CopyTexImageTime_2 - BindTextureTime_2).count() << "\n"
-					<< "mode2 Clear Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(clearTime_2 - CopyTexImageTime_2).count() << "\n"
-					<< "mode2 draw Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(drawTime_2 - clearTime_2).count() << "\n"
-					//<< "mode3 glBindTextureTime Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(BindTextureTime_3 - startTime_3).count() << "\n"
-					//<< "mode3 CopyTexImageTime(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(CopyTexImageTime_3 - BindTextureTime_3).count() << "\n"
-					//<< "mode3 Clear Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(clearTime_3 - CopyTexImageTime_3).count() << "\n"
-					//<< "mode3 draw Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(drawTime_3 - clearTime_3).count() << "\n"
-					<< "mode4 glBindTextureTime Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(BindTextureTime_4 - startTime_4).count() << "\n"
-					<< "mode4 CopyTexImageTime(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(CopyTexImageTime_4 - BindTextureTime_4).count() << "\n"
-					<< "mode4 Clear Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(clearTime_4 - CopyTexImageTime_4).count() << "\n"
-					<< "mode4 draw Time(ms) "<<std::chrono::duration_cast< std::chrono::microseconds >(drawTime_4 - clearTime_4).count() << std::endl;
-            printf("%d fps \n",nbFrames);
-			nbFrames = 0;
-			lastTime = std::chrono::high_resolution_clock::now();
-        }
-*/
-
-    //}
     bool mode_1 = false;
     bool mode_2 = false;
     bool mode_3 = false;
@@ -472,8 +232,6 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
     		    mode_4 = true;
     		    break;
     		default:
-    			//std::cout << "Error. mode number is only 1 ~ 4. " << std::endl;
-    			//exit(1);
     			break;
     	}
     	mode /= 10;
@@ -569,7 +327,6 @@ void gpu_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::st
      }
     std::cout << "10 times Average(µs) : " << average_tmp / 10 << std::endl;
 
-    //deletePng(png);
     deleteShaderProgram(program0);
     deleteShaderProgram(program1);
     deleteShaderProgram(program2);
@@ -761,7 +518,6 @@ void fpga_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::s
 	std::chrono::milliseconds sec(1000);
 	auto lastTime = std::chrono::high_resolution_clock::now();
 	int nbFrames = 0;
-	//int loopNum = atoi(argv[2]);
 	for (int i = 0; i < loopNum; i++)
 	{
 		 auto loadTime = std::chrono::high_resolution_clock::now();
@@ -777,7 +533,6 @@ void fpga_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::s
 		 arithm_accel(imgFilter,imgInput,imgOutput);
 		 auto addTime = std::chrono::high_resolution_clock::now();
 
-        // EGL output
         //glUseProgram(program1);
         //glBindFramebuffer(GL_FRAMEBUFFER, 0); //0を指定すると描画する
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, in_img.cols,in_img.rows , 0, GL_RGB, GL_UNSIGNED_BYTE, imgOutput.data);
@@ -813,12 +568,6 @@ void fpga_loop(Display *xdisplay, EGLDisplay display, EGLSurface surface, std::s
 	blur_img.~Mat();
 	in_img.~Mat();
 	out_img.~Mat();
-/*
-	if(err_per > 0.0f)
-		return 1;
-
-	return 0;
-	*/
 }
 
 
@@ -840,7 +589,7 @@ int main(int argc, char *argv[])
             case 'm':
                 mode = atoi(optarg);
                 if(mode < 1 || 1234 < mode) {
-                    mode = 4;
+                    mode = 1234;
                     std::cout << "[Error] mode(-m) argument is only 1 ~ 4 number." << std::endl;
                 }
                 break;
@@ -871,7 +620,7 @@ int main(int argc, char *argv[])
                     << "\t -f : Enable FPGA acceleration / -g : Enable GPU acceleration \n"
 					  << "\t -n : Exection time at FPGA mode \t(default : 100)\n"
                     << "\t -v : Enable verbose \t(default : false)\n"
-                    << "\t -m : Change mode \t(default : 4)\n"
+                    << "\t -m : Change mode at GPU \t(default : 1234)\n"
                     << "\t -p : Set png file \t(default : Torus.png)\n"
 					   << "\t -i : Set eglSwapInterval() 0:No Limit, 1:60fps 2:30fps 3:20fps ... \t(default : 0)"
 					<< std::endl;
@@ -898,7 +647,6 @@ int main(int argc, char *argv[])
 #endif
     if (in_img.data == NULL)
 	{
-		//fprintf(stderr,"Cannot open image at %s\n",pngFile);
     	std::cerr << "Cannot open image at" << pngFile << std::endl;
 		return 0;
 	}

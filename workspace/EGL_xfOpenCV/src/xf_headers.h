@@ -61,7 +61,20 @@
 #define TIME_STAMP  { clock_end = sds_clock_counter(); printf("elapsed time %lu (tick), %f (Second)\n", clock_end-clock_start ,(float)(1000.0 * clock_end-clock_start / sds_clock_frequency())); clock_start = sds_clock_counter();  }
 #endif
 
+// For Use EGL add by inamasu
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <iostream>
+#include <unistd.h>
+#include <chrono>
+#include <array>
+#include <vector>
+#include <unistd.h>
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 
 #endif//_XF_HEADERS_H_

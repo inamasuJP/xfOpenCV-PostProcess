@@ -201,22 +201,27 @@ SDxライセンスが通っているPCで`$ sdx`コマンドを実行し、Vivad
 (ライセンスの有無については先生に相談するとよい)
 
 0.で作成したWorkspaceを指定し、Launchをクリックする。
+
 <img src="README_Pic/1_SelectWorkspace.png" width="600">
 
 ### 3. xfOpenCVライブラリのインストール
 Welcomeスクリーンが表示されたら、メニューバーから Xilinx -> SDx Libraries... を選択する。
+
 <img src="README_Pic/2_launchVivadoSDx.png" width="600">
 
 xfOpenCVライブラリをインストールする。
+
 <img src="README_Pic/3_InstallxfOpenCV.png" width="600">
 
 ### 4. 新しいプロジェクトの作成
 
 メニューから File -> New -> SDx Application Project を選択し、適当なプロジェクト名をつける。
+
 <img src="README_Pic/4-1_SetProjectName.png" width="600">
 
 
 Platformは**ZCU104**を指定する。
+
 <img src="README_Pic/4-2_SelectZCU104.png" width="600">
 
 
@@ -227,10 +232,12 @@ System Configurationでは、
  * Sysroot path : `/<ダウンロードしたzcu104-rv-ss-2018-3を展開したディレクトリ>/zcu104_rv_ss/sw/a53_linux/a53_linux/sysroot/aarch64-xilinx-linux`
 
 と設定する。
+
 <img src="README_Pic/4-3_SetSystemConfiguration.png" width="600">
 
 
 Templatesでは、**customconv - File I/O**を選択し、Finishをクリック
+
 <img src="README_Pic/4-4_SelectTemplate.png" width="600">
 
 以上の手順でサンプルプロジェクトを作成できる。
@@ -275,7 +282,7 @@ Gitリポジトリをクローンするか、`share/inamasu/2020/EvaluationProgr
 
 Active build configuration: Releaseに変更する。
 
-Hardware Functions に 「filter2D」「LUT」「add」が追加されているのを確認できたら、メニュー内のBuildボタン(トンカチのアイコン)をクリックする。
+Hardware Functions に 「filter2D」「LUT」「add」が追加されているのを確認できたら、メニュー内のBuildボタン(ハンマーのアイコン)をクリックする。
 これでビルドが開始される。
 
 <img src="README_Pic/6_SetRelease.png" width="600">
@@ -289,8 +296,6 @@ Hardware Functions に 「filter2D」「LUT」「add」が追加されている�
 本README内の「ビルド済みファイルの実行方法」と同様に作業すれば実行できる。
 
 ## その他
-
-
 
 ### (参考) xf_config_params.hのパラメータについて
 

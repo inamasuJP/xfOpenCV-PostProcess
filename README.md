@@ -243,13 +243,35 @@ Templatesでは、**customconv - File I/O**を選択し、Finishをクリック
 以上の手順でサンプルプロジェクトを作成できる。
 
 ### 5. ソースのコピー
-
+#### 5.1 srcのコピー
 <!-- 一度Xilinx SDxを終了する。 -->
 
 Gitリポジトリをクローンするか、`share/inamasu/2020/EvaluationProgram/Source/200322_source.zip`をコピーし、展開する。
 
 作成したプロジェクトの`<Workspace>/<ProjectName>/src`ディレクトリ内のファイルを削除し、`<200322_source.zipを展開したもの>/src`内のファイルをコピーする。
 
+#### 5.2 リンクライブラリの設定
+
+メニューの Project -> Properties を開く。
+
+サイドバーから C/C++ Build -> Settingsを開き、Tool Settings内のSDS++ Linker -> Librariesを開く。
+Libraries (-l)の欄に以下の項目を追加する。
+<!-- * opencv_videoio -->
+* png
+* X11
+* EGL
+* GLESv2
+<!-- * opencv_imgcodecs
+* opencv_core
+* opencv_imgproc
+* opencv_features2d
+* opencv_flann
+* opencv_video -->
+
+<img src="README_Pic/5-2_Libraries.png" width="600">
+
+
+#### 5.3 Add Hardware Functions
 Add Hardware Functions (稲妻のアイコン)をクリックし、
 
 More Options -> Show template Functions内の

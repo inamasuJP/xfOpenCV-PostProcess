@@ -244,15 +244,25 @@ Templatesでは、**customconv - File I/O**を選択し、Finishをクリック
 
 ### 5. ソースのコピー
 
-一度Xilinx SDxを終了する。
+<!-- 一度Xilinx SDxを終了する。 -->
 
 Gitリポジトリをクローンするか、`share/inamasu/2020/EvaluationProgram/Source/200322_source.zip`をコピーし、展開する。
 
 作成したプロジェクトの`<Workspace>/<ProjectName>/src`ディレクトリ内のファイルを削除し、`<200322_source.zipを展開したもの>/src`内のファイルをコピーする。
 
-`<Workspace>/<ProjectName>/project.sdx`をエディタで編集する。
+Add Hardware Functions (稲妻のアイコン)をクリックし、
 
-1,2行目を残して、3行目以降を以下のように変更する。
+More Options -> Show template Functions内の
+`Workspace/ProjectName/libs/xfopencv/include`にチェックマークを入れて、
+「LUT」「add」を追加する。
+
+Clock Frequencyは三つとも300MHzに設定する。
+
+<img src="README_Pic/5_Add_Functions.png" width="600">
+
+#### (参考) `<Workspace>/<ProjectName>/project.sdx`について
+Add Hardware Functionsした結果、`<Workspace>/<ProjectName>/project.sdx`の3行目以降が以下のようになっていればよい。
+
 ```xml
   <configuration name="Debug" id="com.xilinx.sdsoc.managedbuild.project.debug.1480543953" dirty="true">
     <configBuildOptions xsi:type="sdsproject:Option" insertapm="false" gensdcard="true" dmclkid="2" enableHwSwTrace="false" traceApplication="false">

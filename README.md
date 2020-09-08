@@ -1,7 +1,6 @@
 # xfOpenCV-PostProcess
 Implement PostProcess with xfOpenCV
 
-作成者 : 稲益秀成
 
 ## 概要
 

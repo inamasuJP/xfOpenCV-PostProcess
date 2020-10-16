@@ -1,5 +1,5 @@
 # xfOpenCV-PostProcess
-Implement PostProcess with xfOpenCV
+【卒業研究の評価プログラムです】Implement PostProcess with xfOpenCV
 
 
 ## 概要
